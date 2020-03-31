@@ -12,7 +12,10 @@ def scrape(array, function, threads):
         print("Scraping %s items using %s on %s threads." % (len(array), function, threads))
 
         # Calls get() and adds the filesize returned each call to an array called filesizes
-        result = pool.map(function, array)
+        result = list(map(function, array))
+        # print("start")
+        # print(list(result))
+        # print("end")
         pool.close()
         pool.join()
         return result
@@ -31,10 +34,10 @@ def addNewLine(file):
 def tabulate(csvFile, array):
     # Files must be in the csv directory inside the project folder
     # Opens the CSV file
-    with open("csv/%s.csv" % (csvFile), 'a', encoding='utf-8') as f:
+    with open("csv/%s.csv" % (csvFile), 'a', newline='' ,encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=',')
         # Adds a new line if there is not one present
-        addNewLine("csv/%s.csv" % (csvFile))
+        # addNewLine("csv/%s.csv" % (csvFile))
         # Add the array passed in to the CSV file
         for i in range(0, len(array)):
             if len(array[i]) > 0:

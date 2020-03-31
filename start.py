@@ -11,8 +11,12 @@ tab = True
 # Make an array of existing Match IDs
 existingMatchIDs = getExistingData("matchIDs", 1)
 
+print(existingMatchIDs[len(existingMatchIDs)-1])
+
 # Get the last ID so we know when to stop looking
 newMatchIDs = getMatchIDs(existingMatchIDs[len(existingMatchIDs)-1])
+
+
 if len(newMatchIDs) < 1:
     print("No new matches found!")
 else:
@@ -41,6 +45,7 @@ else:
 
     # Step 4: Update matchResults.csv
     newMatchInfo = scrape(matchesToCheck, getMatchInfo, threads)
+    print(newMatchInfo)
     # Sometimes this returns a multi-dimensional array, so we remove it
     newMatchInfo = fixArray(fixArray(fixArray(newMatchInfo, 14), 14), 14)
     if tab:

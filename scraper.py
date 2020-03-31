@@ -2,7 +2,7 @@ from htmls import getHTML
 import re
 from datetime import datetime
 from string import digits
-
+from bs4 import BeautifulSoup
 
 def getEventNames(eventID):
     html = getHTML("https://www.hltv.org/results?offset=0&event=%s" % (eventID))
@@ -108,23 +108,24 @@ def getMatchInfo(matchID):
         print("Failed for %s" % (matchID))
         return []
     # Search variables data-unix="
+    soup = BeautifulSoup(html,'html.parser')
     date = re.findall('data-unix=\".*\"', html)
     teamIDs = re.findall('src=\"https://static.hltv.org/images/team/logo/.*\" class', html)
     teamNames = re.findall('class=\"logo\" title=\".*\">', html)
-    map = re.findall('<div class=\"mapname\">.*</div>', html)
-    scores = re.findall('<div class=\"results\"><span class=\".*</span><span>', html)
-
+    map1 = re.findall('<div class=\"mapname\">.*</div>', html)
+    scores=[]
+    for scoress in soup.findAll('div', {'class': 'results played'}):
+        scores.append(str(scoress))
     # Give up if no team names found
     if len(teamNames) < 1:
         return []
-
+        
     # Find the match date
     if len(date) > 0:
         date[0] = (date[0].replace("data-unix=\"", "")).replace("\"", "")[:-3]
         date[0] = datetime.utcfromtimestamp(int(date[0])).strftime('%Y-%m-%d')
     else:
         date.append(0)
-
     # Find the Teams respective IDs
     if len(teamIDs) > 0:
         teamIDs[0] = (teamIDs[0].replace("src=\"https://static.hltv.org/images/team/logo/", "")).replace("\" class", "")
@@ -133,13 +134,13 @@ def getMatchInfo(matchID):
         teamIDs.append(0)
 
     # Find the map(s) that the match was played on
-    if len(map) == 1:
-        map[0] = (map[0].replace("<div class=\"mapname\">", "")).replace("</div>", "")
-    elif len(map) > 1:
-        for i in range(0, len(map)):
-            map[i] = (map[i].replace("<div class=\"mapname\">", "")).replace("</div>", "")
+    if len(map1) == 1:
+        map1[0] = (map1[0].replace("<div class=\"mapname\">", "")).replace("</div>", "")
+    elif len(map1) > 1:
+        for i in range(0, len(map1)):
+            map1[i] = (map1[i].replace("<div class=\"mapname\">", "")).replace("</div>", "")
     else:
-        map.append(0)
+        map1.append(0)
 
     # Find the team standing and half sides
     sides = []
@@ -161,11 +162,13 @@ def getMatchInfo(matchID):
     else:
         return []
 
+    print(sides)
+
     # Find the scores if there is only one map
-    if len(map) == 1:
+    if len(map1) == 1:
         scores[0] = re.findall('\d+', scores[0])
     # Find the scores if there are multiple maps
-    elif len(map) > 1:
+    elif len(map1) > 1:
         for i in range(0, len(scores)):
             scores[i] = re.findall('\d+', scores[i])
     else:
@@ -185,12 +188,12 @@ def getMatchInfo(matchID):
 
     # Make an array for pool.map to process
     result = []
-    if len(map) > 1:
+    if len(map1) > 1:
         for i in range(0, len(scores)):
             # Create a temp array so that each map's stats are each contained in their own array
             tempArray = []
             tempArray.append(date[0])
-            tempArray.append(map[i])
+            tempArray.append(map1[i])
             tempArray.append(teamIDs[0])
             tempArray.append(sides[0])
             tempArray.append(scores[i][0])
@@ -207,7 +210,7 @@ def getMatchInfo(matchID):
             result.append(tempArray)
     else:
         result.append(date[0])
-        result.append(map[0])
+        result.append(map1[0])
         result.append(teamIDs[0])
         result.append(sides[0])
         result.append(scores[0][0])
