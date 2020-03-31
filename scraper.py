@@ -10,23 +10,24 @@ def getEventNames(eventID):
         print("Failed for %s" % (eventID))
         return []
     # Find the type of event (online, LAN, etc)
-    eventType = re.findall(' <div class=\".*text-ellipsis\">', html)
-    if len(eventType) < 1:
+
+    #event name new bs4
+    soup = BeautifulSoup(html,'html.parser')
+    event_name = soup.find('div', {'class': 'eventname'}).text
+
+    #event type
+    eventTypes = re.findall('text-ellipsis\">.*<', html)
+    if len(eventTypes) < 1:
         return []
-    eventNames = re.findall('text-ellipsis\">.*<', html)
+
     eventEndDate = re.findall('class="standard-headline">.*<', html)
-
-    # print eventType
-    if len(eventType) > 0:
-        eventType[0] = (eventType[0].replace(" <div class=\"", "")).replace(" text-ellipsis\">", "")
+    if len(eventTypes) > 0:
+        eventTypes[0] = (eventTypes[0].replace("text-ellipsis\">", "")).replace("<", "")
+        f = eventTypes[0].rfind("(")
+        l = eventTypes[0].rfind(")")
+        eventTypes[0] = eventTypes[0][f+1:l]
     else:
-        eventType.append(0)
-
-    # print eventNames
-    if len(eventNames) > 0:
-        eventNames[0] = (eventNames[0].replace("text-ellipsis\">", "")).replace("<", "")
-    else:
-        eventNames.append(0)
+        eventTypes.append(0)
 
     # print eventEndDate
     if len(eventEndDate) > 0:
@@ -35,8 +36,8 @@ def getEventNames(eventID):
         eventEndDate.append(0)
     # Make an array for pool.map to process
     result = []
-    result.append(eventType[0])
-    result.append(eventNames[0])
+    result.append(eventTypes[0])
+    result.append(event_name)
     result.append(eventEndDate[0])
     result.append(eventID)
     return result
@@ -305,14 +306,22 @@ def getPlayerStats(matchID):
         return []
 
     # Get maps
-    maps = re.findall('<div class=\"stats-content\" id=\".*-content\">', html)
-    if len(maps) > 0:
-        for i in range(0, len(maps)):
-            maps[i] = (maps[i].replace("<div class=\"stats-content\" id=\"", "")).replace("-content\">", "").translate({ord(k): None for k in digits})
-        maps.remove(maps[0])
-    else:
+    soup = BeautifulSoup(html, "html.parser")
+    maps = []
+    try:
+        for map in soup.findAll('div', {'class': 'mapname'}):
+            maps.append(map.text)
+    except:
         print("No player stats for %s" % (matchID))
         return []
+    # maps = re.findall('<div class=\"stats-content\" id=\".*-content\">', html)
+    # if len(maps) > 0:
+    #     for i in range(0, len(maps)):
+    #         maps[i] = (maps[i].replace("<div class=\"stats-content\" id=\"", "")).replace("-content\">", "").translate({ord(k): None for k in digits})
+    #     maps.remove(maps[0])
+    # else:
+    #     print("No player stats for %s" % (matchID))
+    #     return []
 
     # Get Player IDs
     players = re.findall('href=\"/player/.*/', html)
