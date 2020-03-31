@@ -1,5 +1,5 @@
 from multiprocessing.dummy import Pool as ThreadPool
-from html import getHTML
+from htmls import getHTML
 import csv
 import sys
 

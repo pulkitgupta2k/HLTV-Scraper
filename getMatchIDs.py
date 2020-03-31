@@ -1,4 +1,4 @@
-from html import getHTML
+from htmls import getHTML
 import re
 
 
@@ -61,7 +61,6 @@ def endCheck(matchIDs, stop):
 def findMatchIDsAtURL(url):
     # Get the HTML using getHTML()
     html = getHTML(url)
-
     # Create an array of all of the Match URLs on the page
     matchIDs = re.findall('"(.*?000"><a href="/matches/.*?)"', html)
 
