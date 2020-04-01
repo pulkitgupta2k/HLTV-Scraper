@@ -274,6 +274,7 @@ def getPlayers(playerID):
     playerName = re.findall('Complete statistics for.*</a>', html)
     if len(playerName) < 1:
         return []
+
     playerCountry = re.findall('class=\"flag\" title=\".*\"> ', html)
     if len(playerCountry) < 1:
         return []
@@ -287,6 +288,7 @@ def getPlayers(playerID):
     # print teamCountry
     if len(playerCountry) > 0:
         playerCountry[0] = (playerCountry[0].replace("class=\"flag\" title=\"", "")).replace("\"> ", "")
+        playerCountry[0] = (playerCountry[0].replace("\" itemprop=\"nationality", ""))
     else:
         playerCountry.append(0)
 
