@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from string import digits
 from bs4 import BeautifulSoup
+from math import floor
 
 def getEventNames(eventID):
     html = getHTML("https://www.hltv.org/results?offset=0&event=%s" % (eventID))
@@ -13,21 +14,27 @@ def getEventNames(eventID):
 
     #event name new bs4
     soup = BeautifulSoup(html,'html.parser')
-    event_name = soup.find('div', {'class': 'eventname'}).text
-
-    #event type
-    eventTypes = re.findall('text-ellipsis\">.*<', html)
-    if len(eventTypes) < 1:
+    try:
+        event_name = soup.find('div', {'class': 'eventname'}).text
+    except:
         return []
+    #event type
+    try:
+        event_type = soup.find('td', {'class': 'location gtSmartphone-only'}).text.strip('\n')
+    except:
+        return []
+    # eventTypes = re.findall('text-ellipsis\">.*<', html)
+    # if len(event_type) < 1:
+    #     return []
 
     eventEndDate = re.findall('class="standard-headline">.*<', html)
-    if len(eventTypes) > 0:
-        eventTypes[0] = (eventTypes[0].replace("text-ellipsis\">", "")).replace("<", "")
-        f = eventTypes[0].rfind("(")
-        l = eventTypes[0].rfind(")")
-        eventTypes[0] = eventTypes[0][f+1:l]
-    else:
-        eventTypes.append(0)
+    # if len(eventTypes) > 0:
+    #     eventTypes[0] = (eventTypes[0].replace("text-ellipsis\">", "")).replace("<", "")
+    #     f = eventTypes[0].rfind("(")
+    #     l = eventTypes[0].rfind(")")
+    #     eventTypes[0] = eventTypes[0][f+1:l]
+    # else:
+    #     eventTypes.append(0)
 
     # print eventEndDate
     if len(eventEndDate) > 0:
@@ -36,7 +43,7 @@ def getEventNames(eventID):
         eventEndDate.append(0)
     # Make an array for pool.map to process
     result = []
-    result.append(eventTypes[0])
+    result.append(event_type)
     result.append(event_name)
     result.append(eventEndDate[0])
     result.append(eventID)
@@ -73,31 +80,41 @@ def getTeams(teamID):
         print("Failed for %s" % (teamID))
         return []
     # Find the type of event (online, LAN, etc)
-    teamName = re.findall('<div><span class=\"subjectname\">.*</span><br><i', html)
-    if len(teamName) < 1:
+    soup = BeautifulSoup(html, 'html.parser')
+    try:
+        teamName = soup.find("div", {"class": "profile-team-name text-ellipsis"}).text
+    except:
         return []
-    teamCountry = re.findall('fa fa-map-marker\" aria-hidden=\"true\"></i>.*<', html)
-    if len(teamCountry) < 1:
-        teamCountry = re.findall('fa fa-map-marker\" aria-hidden=\"true\"></i>.*</div>', html)
-    if len(teamCountry) < 1:
-        return []
+    # teamName = re.findall('<div><span class=\"subjectname\">.*</span><br><i', html)
+    # if len(teamName) < 1:
+    #     return []
+    try:
+        teamCountry = soup.find("div", {"class": "team-country text-ellipsis"}).text
+    except:
+        return[]
+    # teamCountry = re.findall('fa fa-map-marker\" aria-hidden=\"true\"></i>.*<', html)
+    # if len(teamCountry) < 1:
+    #     teamCountry = soup.find("div", {"class": "team-country text-ellipsis"}).text
+    #     # teamCountry = re.findall('fa fa-map-marker\" aria-hidden=\"true\"></i>.*</div>', html)
+    # if len(teamCountry) < 1:
+    #     return []
 
     # print teamName
-    if len(teamName) > 0:
-        teamName[0] = (teamName[0].replace("<div><span class=\"subjectname\">", "")).replace("</span><br><i", "")
-    else:
-        teamName.append(0)
+    # if len(teamName) > 0:
+    #     teamName[0] = (teamName[0].replace("<div><span class=\"subjectname\">", "")).replace("</span><br><i", "")
+    # else:
+    #     teamName.append(0)
 
     # print teamCountry
-    if len(teamCountry) > 0:
-        teamCountry[0] = (teamCountry[0].replace("fa fa-map-marker\" aria-hidden=\"true\"></i> ", "")).split("<", 1)[0]
-    else:
-        teamCountry.append(0)
+    # if len(teamCountry) > 0:
+    #     teamCountry[0] = (teamCountry[0].replace("fa fa-map-marker\" aria-hidden=\"true\"></i> ", "")).split("<", 1)[0]
+    # else:
+    #     teamCountry.append(0)
 
     # Make an array for pool.map to process
     array = []
-    array.append(teamName[0])
-    array.append(teamCountry[0])
+    array.append(teamName)
+    array.append(teamCountry)
     array.append(teamID)
 
     return array
@@ -162,8 +179,6 @@ def getMatchInfo(matchID):
                 sides.append("T")
     else:
         return []
-
-    print(sides)
 
     # Find the scores if there is only one map
     if len(map1) == 1:
@@ -306,107 +321,47 @@ def getPlayerStats(matchID):
     if html is None:
         print("Failed for %s" % (matchID))
         return []
+    soup = BeautifulSoup(html, "html.parser")
 
     # Get maps
-    soup = BeautifulSoup(html, "html.parser")
     maps = []
     try:
         for map in soup.findAll('div', {'class': 'mapname'}):
             maps.append(map.text)
     except:
         print("No player stats for %s" % (matchID))
-        return []
-    # maps = re.findall('<div class=\"stats-content\" id=\".*-content\">', html)
-    # if len(maps) > 0:
-    #     for i in range(0, len(maps)):
-    #         maps[i] = (maps[i].replace("<div class=\"stats-content\" id=\"", "")).replace("-content\">", "").translate({ord(k): None for k in digits})
-    #     maps.remove(maps[0])
-    # else:
-    #     print("No player stats for %s" % (matchID))
-    #     return []
-
-    # Get Player IDs
-    players = re.findall('href=\"/player/.*/', html)
-    if len(players) > 0:
-        for i in range(0, len(players)):
-            players[i] = (players[i].replace("href=\"/player/", "")).replace("/", "")
-    else:
-        print("No player IDs for %s" % (matchID))
-        return []
-
-    # Find player KDs
-    kd = re.findall('<td class=\"kd text-center\">.*</td>', html)
-    kills = []
-    deaths = []
-    if len(kd) > 0:
-        for i in range(0, len(kd)):
-            kd[i] = (kd[i].replace("<td class=\"kd text-center\">", "")).replace("</td>", "")
-            # Clean up the hyphenated numbers
-            kills.append(kd[i][0:kd[i].find('-')])
-            deaths.append(kd[i][kd[i].find('-')+1:len(kd[i])])
-    else:
-        print("No player K/D for %s" % (matchID))
-        return []
-    # Remove unnecessary instances of D
-    deaths[:] = [x for x in deaths if x != 'D']
-    # Remove unnecessary instances of K
-    kills[:] = [x for x in kills if x != 'K']
-
-    # Find player ADR
-    adr = re.findall('<td class=\"adr text-center \">.*</td>', html)
-    if len(adr) > 0:
-        for i in range(0, len(adr)):
-            adr[i] = (adr[i].replace("<td class=\"adr text-center \">", "")).replace("</td>", "")
-    else:
-        print("No player ADR for %s" % (matchID))
-        adr = [""] * 70
-
-    # Find player KAST%
-    kast = re.findall('<td class=\"kast text-center\">.*</td>', html)
-    if len(kast) > 0:
-        for i in range(0, len(kast)):
-            kast[i] = (kast[i].replace("<td class=\"kast text-center\">", "")).replace("%</td>", "")
-    else:
-        print("No player KAST ratio for %s" % (matchID))
-        kast = [""] * 70
-
-    # Find player rating
-    rating = re.findall('<td class=\"rating text-center\">.*</td>', html)
-    if len(rating) > 0:
-        for i in range(0, len(rating)):
-            rating[i] = (rating[i].replace("<td class=\"rating text-center\">", "")).replace("</td>", "")
-    else:
-        print("No player Rating for %s" % (matchID))
-        return []
-
-    # Remove unnecessary instances of 'Rating'
-    rating[:] = [x for x in rating if x != 'Rating']
-
-    # Handle array building
-    masterArray = []
-    for i in range(0, len(maps)):
-        # Arrays have data for multiple matches, so this offsets us by the amount to get each map separately
-        offset = 10 * (i+1)
-        for b in range(0, 5):
-            playerArray = []
-            playerArray.append(maps[i])
-            playerArray.append(players[b+offset])
-            playerArray.append(kills[b+offset])
-            playerArray.append(deaths[b+offset])
-            playerArray.append(adr[b+offset])
-            playerArray.append(kast[b+offset])
-            playerArray.append(rating[b+offset])
-            playerArray.append(matchID)
-            masterArray.append(playerArray)
-        for b in range(5, 10):
-            playerArray = []
-            playerArray.append(maps[i])
-            playerArray.append(players[b+offset])
-            playerArray.append(kills[b+offset])
-            playerArray.append(deaths[b+offset])
-            playerArray.append(adr[b+offset])
-            playerArray.append(kast[b+offset])
-            playerArray.append(rating[b+offset])
-            playerArray.append(matchID)
-            masterArray.append(playerArray)
-    return masterArray
+        # return []
+    ctr = 0
+    masterArray= []
+    for index,stats in enumerate(soup.findAll("table", {"class": "table totalstats"})):
+            if index < 2:
+                continue
+            else:
+                map = maps[floor(ctr)]
+                ctr = ctr+0.5
+                for players in stats.findAll('tr', {"class": ""}):
+                    
+                    playerID_ = players.a['href']
+                    playerID_ = playerID_[1:]
+                    playerID_ = playerID_[playerID_.find('/')+1:playerID_.rfind('/')]
+                    kd = players.find('td',{'class': 'kd text-center'}).text.split('-')
+                    k = kd[0]
+                    d = kd[1]
+                    adr = players.find('td',{'class': lambda x: x and 'adr' in x.split()}).text
+                    kast = players.find('td',{'class': lambda x: x and 'kast' in x.split()}).text
+                    kast = kast[:len(kast)-1]
+                    rating = players.find('td',{'class': lambda x: x and 'rating' in x.split()}).text
+                    
+                    stat = []
+                    stat.append(map)
+                    stat.append(playerID_)
+                    stat.append(k)
+                    stat.append(d)
+                    stat.append(adr)
+                    stat.append(kast)
+                    stat.append(rating)
+                    stat.append(matchID)
+                    # print(stat)
+                    masterArray.append(stat)
+                
+    return(masterArray)
