@@ -47,3 +47,7 @@ Each match has player stats for each map. The script looks for these statistics 
 ## Updating Players and Teams
 
 Each player and team on HLTV has a unique identification number that increases as new players are added to the database. To find new players and teams, we get the maximum identifier value form the respective `.csv` file and iterate over it using `getIterableItems`. From there the relevant pages are scraped and tabulated to `players.csv` and `teams.csv`.
+
+## Starting Over
+
+If you made an entry of a more recent event and want to go beyond that, remove clear the csv : `matchIDs.csv` to restart.(do not remove first row, ID and Title)
