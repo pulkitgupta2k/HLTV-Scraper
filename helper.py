@@ -2,7 +2,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from htmls import getHTML
 import csv
 import sys
-
+import numpy
 
 def scrape(array, function, threads):
         # Define the number of threads
@@ -88,14 +88,16 @@ def unDimension(array, item):
     return result
 
 
-def fixArray(array, value):
+def fixArray(array):
     # Used to clean match info results for matches with more than one map
-    for i in range(0, len(array)):
-        if len(array[i]) < value:
-            for b in range(0, len(array[i])):
-                array.append(array[i][b])
-            array.remove(array[i])
-    return array
+    newArray = []
+    for i in array:
+        if len(numpy.array(i).shape) == 2:
+            for temp in i:
+                newArray.append(temp)
+        else:
+            newArray.append(i)
+    return newArray
 
 
 def fixPlayerStats(array):

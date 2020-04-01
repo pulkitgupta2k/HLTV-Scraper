@@ -10,6 +10,20 @@ tab = True
 
 # Make an array of existing Match IDs
 existingMatchIDs = getExistingData("matchIDs", 1)
+
+if(len(existingMatchIDs) == 1):
+    lim_match = input("Enter the url of the last match you want to get the data: ")
+    lim_match = lim_match.replace("https://www.hltv.org/matches/","")
+    lim_match_id = lim_match.split("/")[0]
+    narr = []
+    narr.append(lim_match_id)
+    narr.append(lim_match)
+    final_arr = []
+    final_arr.append(narr)
+    tabulate("matchIDs",final_arr)
+
+existingMatchIDs = getExistingData("matchIDs", 1)
+
 # Get the last ID so we know when to stop looking
 newMatchIDs = getMatchIDs(existingMatchIDs[len(existingMatchIDs)-1])
 
@@ -43,7 +57,7 @@ else:
     # Step 4: Update matchResults.csv
     newMatchInfo = scrape(matchesToCheck, getMatchInfo, threads)
     # Sometimes this returns a multi-dimensional array, so we remove it
-    newMatchInfo = fixArray(fixArray(fixArray(newMatchInfo, 14), 14), 14)
+    newMatchInfo = fixArray(newMatchInfo)
     if tab:
         tabulate("matchResults", newMatchInfo)
 
