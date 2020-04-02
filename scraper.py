@@ -6,11 +6,11 @@ from bs4 import BeautifulSoup
 from math import floor
 from time import sleep
 
-interval = 0.5
+# interval = 0
 
 def getEventNames(eventID):
     html = getHTML("https://www.hltv.org/results?offset=0&event=%s" % (eventID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (eventID))
         return []
@@ -56,7 +56,7 @@ def getEventNames(eventID):
 
 def getMatchEvents(matchID):
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
@@ -81,7 +81,7 @@ def getMatchEvents(matchID):
 
 def getTeams(teamID):
     html = getHTML("https://www.hltv.org/team/%s/a" % (teamID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (teamID))
         return []
@@ -128,13 +128,13 @@ def getTeams(teamID):
 
 def getMatchInfo(matchID):
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
     # Search variables data-unix="
     soup = BeautifulSoup(html,'html.parser')
-    date = re.findall('data-unix=\".*\"', html)
+    
     teamIDs = re.findall('src=\"https://static.hltv.org/images/team/logo/.*\" class', html)
     teamNames = re.findall('class=\"logo\" title=\".*\">', html)
     map1 = re.findall('<div class=\"mapname\">.*</div>', html)
@@ -144,13 +144,16 @@ def getMatchInfo(matchID):
     # Give up if no team names found
     if len(teamNames) < 1:
         return []
-        
+
+    date = []    
+    
     # Find the match date
-    if len(date) > 0:
-        date[0] = (date[0].replace("data-unix=\"", "")).replace("\"", "")[:-3]
-        date[0] = datetime.utcfromtimestamp(int(date[0])).strftime('%Y-%m-%d')
-    else:
-        date.append(0)
+    date.append(soup.find('div', {'class': 'date'}).text)
+    # if len(date) > 0:
+    #     date[0] = (date[0].replace("data-unix=\"", "")).replace("\"", "")[:-3]
+    #     date[0] = datetime.utcfromtimestamp(int(date[0])).strftime('%Y-%m-%d')
+    # else:
+    #     date.append(0)
     # Find the Teams respective IDs
     if len(teamIDs) > 0:
         teamIDs[0] = (teamIDs[0].replace("src=\"https://static.hltv.org/images/team/logo/", "")).replace("\" class", "")
@@ -178,18 +181,50 @@ def getMatchInfo(matchID):
             sides.append("T")
     elif len(scores) > 1:
         for i in range(0, len(scores)):
-            if re.findall('\"t\"|\"ct\"', scores[i])[0] == "\"t\"":
-                sides.append("T")
-                sides.append("CT")
-            else:
-                sides.append("CT")
-                sides.append("T")
+            try:
+                if re.findall('\"t\"|\"ct\"', scores[i])[0] == "\"t\"":
+                    sides.append("T")
+                    sides.append("CT")
+                else:
+                    sides.append("CT")
+                    sides.append("T")
+            except:
+                print("HLTV altered score layout for %s" % (matchID))
+                return[]
     else:
         return []
 
+    ctr=0
+    team_scores = []
+    team_h_scores = []
+
+    for m in map1:
+        team_scores.append([])
+        team_h_scores.append([])
+
+    for fins in soup.findAll('div', {'class': 'results-team-score'}):
+        team_scores[floor(ctr)].append(fins.text)
+        ctr=ctr+0.5
+    
+    ctr = 0
+    
+    for fins in soup.findAll('div', {'class': 'results-center-half-score'}):
+        string = fins.text
+        string = string.replace(':', ' ')
+        string = string.replace(';', ' ')
+        string = string.replace('(', ' ')
+        string = string.replace(')', ' ')
+        string = string.split()
+        if(len(string) < 5):
+            string.append(0)
+            string.append(0)
+        for s in string:
+            team_h_scores[floor(ctr)].append(s)
+        ctr=ctr+1
+        
     # Find the scores if there is only one map
     if len(map1) == 1:
-        scores[0] = re.findall('\d+', scores[0])
+        scores[0]
     # Find the scores if there are multiple maps
     elif len(map1) > 1:
         for i in range(0, len(scores)):
@@ -219,16 +254,16 @@ def getMatchInfo(matchID):
             tempArray.append(map1[i])
             tempArray.append(teamIDs[0])
             tempArray.append(sides[0])
-            tempArray.append(scores[i][0])
-            tempArray.append(scores[i][2])
-            tempArray.append(scores[i][4])
-            tempArray.append(scores[i][6])
+            tempArray.append(team_scores[i][0])
+            tempArray.append(team_h_scores[i][0])
+            tempArray.append(team_h_scores[i][2])
+            tempArray.append(team_h_scores[i][4])
             tempArray.append(teamIDs[1])
             tempArray.append(sides[1])
-            tempArray.append(scores[i][1])
-            tempArray.append(scores[i][3])
-            tempArray.append(scores[i][5])
-            tempArray.append(scores[i][7])
+            tempArray.append(team_scores[i][1])
+            tempArray.append(team_h_scores[i][1])
+            tempArray.append(team_h_scores[i][3])
+            tempArray.append(team_h_scores[i][5])
             tempArray.append(matchID)
             result.append(tempArray)
     else:
@@ -236,16 +271,16 @@ def getMatchInfo(matchID):
         result.append(map1[0])
         result.append(teamIDs[0])
         result.append(sides[0])
-        result.append(scores[0][0])
-        result.append(scores[0][2])
-        result.append(scores[0][4])
-        result.append(scores[0][6])
+        result.append(team_scores[0][0])
+        result.append(team_h_scores[0][0])
+        result.append(team_h_scores[0][2])
+        result.append(team_h_scores[0][4])
         result.append(teamIDs[1])
         result.append(sides[1])
-        result.append(scores[0][1])
-        result.append(scores[0][3])
-        result.append(scores[0][5])
-        result.append(scores[0][7])
+        result.append(team_scores[0][1])
+        result.append(team_h_scores[0][1])
+        result.append(team_h_scores[0][3])
+        result.append(team_h_scores[0][5])
         result.append(matchID)
     return result
 
@@ -253,7 +288,7 @@ def getMatchInfo(matchID):
 def getMatchLineups(matchID):
     # Set some vars for later
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
@@ -290,7 +325,7 @@ def getMatchLineups(matchID):
 
 def getPlayers(playerID):
     html = getHTML("https://www.hltv.org/player/%s/a" % (playerID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (playerID))
         return []
@@ -327,7 +362,7 @@ def getPlayers(playerID):
 
 def getPlayerStats(matchID):
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
-    sleep(interval)
+    # sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
