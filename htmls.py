@@ -1,6 +1,7 @@
 from urllib.request import Request, urlopen
 import urllib.request
 import re
+import http
 
 
 def getHTML(url):
@@ -17,4 +18,9 @@ def getHTML(url):
             return html
     except urllib.error.HTTPError as err:
         print("%s for %s" % (err.code, url))
+        return None
+    except (http.client.IncompleteRead) as e:
+        html = e.partial
+        return html
+    except:
         return None
