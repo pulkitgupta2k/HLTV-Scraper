@@ -4,9 +4,13 @@ from datetime import datetime
 from string import digits
 from bs4 import BeautifulSoup
 from math import floor
+from time import sleep
+
+interval = 0.5
 
 def getEventNames(eventID):
     html = getHTML("https://www.hltv.org/results?offset=0&event=%s" % (eventID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (eventID))
         return []
@@ -52,6 +56,7 @@ def getEventNames(eventID):
 
 def getMatchEvents(matchID):
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
@@ -76,6 +81,7 @@ def getMatchEvents(matchID):
 
 def getTeams(teamID):
     html = getHTML("https://www.hltv.org/team/%s/a" % (teamID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (teamID))
         return []
@@ -122,6 +128,7 @@ def getTeams(teamID):
 
 def getMatchInfo(matchID):
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
@@ -246,6 +253,7 @@ def getMatchInfo(matchID):
 def getMatchLineups(matchID):
     # Set some vars for later
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
@@ -282,6 +290,7 @@ def getMatchLineups(matchID):
 
 def getPlayers(playerID):
     html = getHTML("https://www.hltv.org/player/%s/a" % (playerID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (playerID))
         return []
@@ -318,6 +327,7 @@ def getPlayers(playerID):
 
 def getPlayerStats(matchID):
     html = getHTML("https://www.hltv.org/matches/%s" % (matchID))
+    sleep(interval)
     if html is None:
         print("Failed for %s" % (matchID))
         return []
