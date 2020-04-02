@@ -19,8 +19,6 @@ def getHTML(url):
     except urllib.error.HTTPError as err:
         print("%s for %s" % (err.code, url))
         return None
-    except (http.client.IncompleteRead) as e:
-        html = e.partial
-        return html
     except:
+        print('END POINT ERROR')
         return None
