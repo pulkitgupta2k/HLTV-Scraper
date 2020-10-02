@@ -1,3 +1,5 @@
+##Working Update
+
 # HLTV Scraper
 
 This is a multi-threaded Python scraper designed to pull data from HLTV.org and tabulate it into a series of CSV files. It is written in pure Python, so it should run on any system that can run Python 3. It is not compatible with Python 2, so you may need to install the latest Python release from [here](https://www.python.org/downloads/).
